@@ -3,16 +3,16 @@
 
 import logging
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
-from scapy.all import *
+from scapy.all import IP, ICMP, sr1
 import ipaddress
 import threading
 from queue import Queue
-import pdb
+
 
 class PingThread(threading.Thread):
     def __init__(self, queue, out, timeout=0.5):
-        self.TIMEOUT = timeout
         threading.Thread.__init__(self)
+        self.TIMEOUT = timeout
         self.queue = queue
         self.out = out
 
@@ -20,17 +20,21 @@ class PingThread(threading.Thread):
         while True:
             ip = self.queue.get()
             dst_ip = self.icmp_ping(ip)
+
             if dst_ip:
                 self.out.put(dst_ip)
+
             self.queue.task_done()
 
     def icmp_ping(self, ip):
         packet = IP(dst=ip, ttl=20)/ICMP()
         reply = sr1(packet, timeout=self.TIMEOUT, verbose=0)
+
         if reply:
             return reply.src
         else:
             return False
+
 
 class PingScanner:
     def __init__(self, num_threads=10):
@@ -72,5 +76,5 @@ class PingScanner:
         return [network]
 
 if __name__ == "__main__":
-    scanner = PingScanner()
+    scanner = PingScanner(num_threads=10)
     print(scanner.scan("192.168.0.100-192.168.0.103"))
