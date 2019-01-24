@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: UTF=8 -*-
 
+import logging
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from scapy.all import srp
 from scapy.all import Ether, ARP, conf
 import ipaddress
 import re
-
 
 class ArpScanner:
     def __init__(self):
         pass
 
     def scan(self, ip_range):
-        if not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$",ip_range):
-            ip_range = self.get_ip_range(ip_range)
-        ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=ip_range), timeout=2)
+        ip_range = self.get_ip_range(ip_range)
+        ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=ip_range), timeout=2, verbose=0)
 
         collection = []
         for snd, rcv in ans:
@@ -43,4 +43,4 @@ class ArpScanner:
 
 if __name__ == "__main__":
     scanner = ArpScanner()
-    print(scanner.scan("192.168.0.1, 192.168.0.105"))
+    print(scanner.scan("192.168.0.1"))
