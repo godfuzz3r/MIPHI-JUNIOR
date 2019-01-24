@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 import argparse
-from core.arp_scan import ArpScanner
-from core.mac_vendor import MacParser
+
+def check_root():
+    if not os.geteuid() == 0:
+        print("Run as root.")
+        exit(1)
 
 def main():
-    pass
+    check_root()
 
 if __name__ == "__main__":
     main()

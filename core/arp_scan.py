@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: UTF=8 -*-
 
-import os
 from scapy.all import srp
 from scapy.all import Ether, ARP, conf
 import ipaddress
+import re
 
 
 class ArpScanner:
     def __init__(self):
-        self.check_root()
+        pass
 
-    def check_root(self):
-        if not os.geteuid() == 0:
-            print("Run as root.")
-            exit(1)
-
-    def scan(self, iprange):
-        ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=iprange), timeout=2)
+    def scan(self, ip_range):
+        if not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$",ip_range):
+            ip_range = self.get_ip_range(ip_range)
+        ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=ip_range), timeout=2)
 
         collection = []
         for snd, rcv in ans:
@@ -36,12 +33,14 @@ class ArpScanner:
             return (str(ip) for ip in addresess)
 
         if "/" in network:
-            network = network[:network.rindex(".")]+".0"+network[network.rindex("/"):]
-            return (str(ip) for ip in ipaddress.IPv4Network(network))
+            addresess = network[:network.rindex(".")] + ".0"+network[network.rindex("/"):]
+            return (str(ip) for ip in ipaddress.IPv4Network(addresess))
+
+        if "," or ", " in network:
+            return (ip for ip in network.replace(", ", ",").split(","))
 
         return [network]
 
 if __name__ == "__main__":
     scanner = ArpScanner()
-    ip_range = scanner.get_ip_range("192.168.0.4-192.168.0.107")
-    print(scanner.scan(ip_range))
+    print(scanner.scan("192.168.0.1, 192.168.0.105"))
