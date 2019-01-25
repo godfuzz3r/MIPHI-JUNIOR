@@ -10,11 +10,12 @@ from queue import Queue
 
 
 class PingThread(threading.Thread):
-    def __init__(self, queue, out, timeout=0.5):
+    def __init__(self, queue, out, timeout=0.5, verbose=True):
         threading.Thread.__init__(self)
         self.TIMEOUT = timeout
         self.queue = queue
         self.out = out
+        self.verbose = verbose
 
     def run(self):
         while True:
@@ -22,6 +23,8 @@ class PingThread(threading.Thread):
             dst_ip = self.icmp_ping(ip)
 
             if dst_ip:
+                if self.verbose:
+                    print(dst_ip)
                 self.out.put(dst_ip)
 
             self.queue.task_done()
@@ -37,16 +40,20 @@ class PingThread(threading.Thread):
 
 
 class PingScanner:
-    def __init__(self, num_threads=10):
+    def __init__(self, num_threads=10, verbose=True):
         self.num_threads = num_threads
+        self.verbose = verbose
 
     def scan(self, ip_range):
-        ip_range = self.get_ip_range(ip_range)
+        if self.verbose:
+            print("Performing PING scan...")
+            print("-"*40)
+            
         queue = Queue()
         out = Queue()
 
         for i in range(self.num_threads):
-            t = PingThread(queue, out)
+            t = PingThread(queue, out, verbose=self.verbose)
             t.setDaemon(True)
             t.start()
 
@@ -54,27 +61,11 @@ class PingScanner:
             queue.put(ip)
 
         queue.join()
+        if self.verbose:
+            print("-"*40, end="\n\n")
         return [ip for ip in out.queue]
 
-    def get_ip_range(self, network):
-        # преобразование данных типа "ip_first-ip_last", "ip/mask", "ip1, ip2, ip3", "ip" в список ip-адресов
-        if "-" in network:
-            ip_first, ip_last = network.strip(" ").split("-")
-            addresess = ipaddress.summarize_address_range(
-                                                            ipaddress.IPv4Address(ip_first),
-                                                            ipaddress.IPv4Address(ip_last))
-            addresess = sum([list(cidr) for cidr in addresess], [])
-            return (str(ip) for ip in addresess)
-
-        if "/" in network:
-            addresess = network[:network.rindex(".")] + ".0"+network[network.rindex("/"):]
-            return (str(ip) for ip in ipaddress.IPv4Network(addresess))
-
-        if "," or ", " in network:
-            return (ip for ip in network.replace(", ", ",").split(","))
-
-        return [network]
 
 if __name__ == "__main__":
-    scanner = PingScanner(num_threads=10)
-    print(scanner.scan("192.168.0.100-192.168.0.103"))
+    scanner = PingScanner(num_threads=40, verbose=True)
+    scanner.scan("192.168.0.1/24")

@@ -4,7 +4,7 @@
 
 class MacParser:
     MANUF_URL = "https://code.wireshark.org/review/gitweb?p=wireshark.git;a=blob_plain;f=manuf;hb=HEAD"
-    DB_PATH = "data/Wireshark_manufacturer_database.txt"
+    DB_PATH = "core/data/Wireshark_manufacturer_database.txt"
 
     def __init__(self):
         pass

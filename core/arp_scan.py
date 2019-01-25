@@ -7,40 +7,43 @@ from scapy.all import srp
 from scapy.all import Ether, ARP, conf
 import ipaddress
 import re
+from core.mac_vendor import MacParser
 
 class ArpScanner:
-    def __init__(self):
-        pass
+    def __init__(self, verbose=True):
+        self.verbose = verbose
 
     def scan(self, ip_range):
-        ip_range = self.get_ip_range(ip_range)
+        """ Принимает на вход список ip-адресов для сканирования,
+            возвращает список работающих хостов в формате
+            [ [ip, macaddr], [ip, macaddr], ... ]
+        """
+        if self.verbose:
+                print("Performing ARP scan...")
+                print("-"*40)
+
         ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=ip_range), timeout=2, verbose=0)
 
         collection = []
         for snd, rcv in ans:
             result = rcv.sprintf(r"%ARP.psrc% %Ether.src%").split()
+            if self.verbose:
+                self.show_info(result)
             collection.append(result)
+
+        if self.verbose:
+            print("-"*40, end="\n\n")
         return collection
 
-    def get_ip_range(self, network):
-        # преобразование данных типа first_ip-last_ip в список ip-адресов
-        if "-" in network:
-            ip_first, ip_last = network.strip(" ").split("-")
-            addresess = ipaddress.summarize_address_range(
-                                                            ipaddress.IPv4Address(ip_first),
-                                                            ipaddress.IPv4Address(ip_last))
-            addresess = sum([list(cidr) for cidr in addresess], [])
-            return (str(ip) for ip in addresess)
+    def show_info(self, data=False):
+        mac_parser = MacParser()
 
-        if "/" in network:
-            addresess = network[:network.rindex(".")] + ".0"+network[network.rindex("/"):]
-            return (str(ip) for ip in ipaddress.IPv4Network(addresess))
+        ip, mac = data
+        vendor = mac_parser.search(mac)
+        print("%s\t%s\t%s" % (ip, mac, vendor))
 
-        if "," or ", " in network:
-            return (ip for ip in network.replace(", ", ",").split(","))
-
-        return [network]
 
 if __name__ == "__main__":
-    scanner = ArpScanner()
-    print(scanner.scan("192.168.0.1"))
+    scanner = ArpScanner(verbose=True)
+    out = scanner.scan(["192.168.0.1"])
+    print(out)

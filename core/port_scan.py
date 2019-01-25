@@ -10,15 +10,16 @@ import threading
 from queue import Queue
 
 class PortscanThread(threading.Thread):
-    ports = [80, 8080, 23, 22]
+    ports = [80, 8080, 23]
     start_clock = datetime.now()
     SYNACK = 0x12
     RSTACK = 0x14
 
-    def __init__(self, queue, out):
+    def __init__(self, queue, out, verbose=True):
         threading.Thread.__init__(self)
         self.queue = queue
         self.out = out
+        self.verbose = verbose
 
     def run(self):
         while True:
@@ -26,7 +27,9 @@ class PortscanThread(threading.Thread):
             open_ports = self.ScanPorts(ip)
 
             if open_ports:
-                print(ip, open_ports)
+                if self.verbose:
+                    print("Host:\t%s" % ip)
+                    print("Ports:\t%s" % ", ".join(map(str, open_ports)), end="\n\n")
                 self.out.put((ip, open_ports))
 
             self.queue.task_done()
@@ -34,7 +37,10 @@ class PortscanThread(threading.Thread):
     def ScanPorts(self, host):
         open_ports = []
         for port in self.ports:
-            if self.ScanPort(host, port):
+            port_status = self.ScanPort(host, port)
+            if port_status is "Unreachable":
+                return False
+            elif port_status is "Open":
                 open_ports.append(port)
 
         if open_ports:
@@ -44,28 +50,39 @@ class PortscanThread(threading.Thread):
 
     def ScanPort(self, host, port):
         srcport = RandShort()
-        SYNACKpkt = sr1(IP(dst = host)/TCP(sport = srcport, dport = port, flags = "S"))
+        SYNACKpkt = sr1(IP(dst = host)/TCP(sport = srcport, dport = port, flags = "S"), timeout=1, verbose=0)
+        if not SYNACKpkt:
+            return "Unreachable"
+
         pktflags = SYNACKpkt.getlayer(TCP).flags
 
         RSTpkt = IP(dst = host)/TCP(sport = srcport, dport = port, flags = "R")
-        send(RSTpkt)
+        send(RSTpkt, verbose=0)
         if pktflags == self.SYNACK:
-            return True
+            return "Open"
         else:
             return False
 
 
 class PortScanner:
-    def __init__(self, num_threads=10):
+    def __init__(self, num_threads=10, verbose=True):
         self.num_threads = num_threads
+        self.verbose = verbose
+
+        if self.verbose:
+            print("Performing port scan...")
+            print("-"*40)
 
     def scan(self, ip_range):
-        ip_range = self.get_ip_range(ip_range)
+        """ Принимает список ip-адресов для сканирования,
+            возвращает список хостов с открытыми портами в формате
+            [ (ip, [port1, port2]), (ip, [port1, port2]), ... ]
+        """
         queue = Queue()
         out = Queue()
 
         for i in range(self.num_threads):
-            t = PortscanThread(queue, out)
+            t = PortscanThread(queue, out, verbose=self.verbose)
             t.setDaemon(True)
             t.start()
 
@@ -73,6 +90,8 @@ class PortScanner:
             queue.put(ip)
 
         queue.join()
+        if self.verbose:
+            print("-"*40, end="\n\n")
         return [ip for ip in out.queue]
 
     def get_ip_range(self, network):
@@ -95,6 +114,11 @@ class PortScanner:
         return [network]
 
 if __name__ == "__main__":
-    scanner = PortScanner()
-    ip = "192.168.0.1,192.168.0.103"
-    print(scanner.scan(ip))
+    import sys
+    scanner = PortScanner(verbose=True, num_threads=1)
+    #ip = "192.168.0.1,192.168.0.2,192.168.0.100"
+    ip = sys.argv[1]
+    print(ip)
+    #exit()
+    out = scanner.scan([ip])
+    print(out)
