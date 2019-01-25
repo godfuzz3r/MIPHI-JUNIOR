@@ -28,8 +28,8 @@ class PortscanThread(threading.Thread):
 
             if open_ports:
                 if self.verbose:
-                    print("Host:\t%s" % ip)
-                    print("Ports:\t%s" % ", ".join(map(str, open_ports)), end="\n\n")
+                    print("\tHost:\t%s" % ip)
+                    print("\tPorts:\t%s" % ", ".join(map(str, open_ports)), end="\n\n")
                 self.out.put((ip, open_ports))
 
             self.queue.task_done()
@@ -69,15 +69,15 @@ class PortScanner:
         self.num_threads = num_threads
         self.verbose = verbose
 
-        if self.verbose:
-            print("Performing port scan...")
-            print("-"*40)
-
     def scan(self, ip_range):
         """ Принимает список ip-адресов для сканирования,
             возвращает список хостов с открытыми портами в формате
             [ (ip, [port1, port2]), (ip, [port1, port2]), ... ]
         """
+        if self.verbose:
+            print("Performing port scan...")
+            print("-"*40)
+
         queue = Queue()
         out = Queue()
 
@@ -90,28 +90,14 @@ class PortScanner:
             queue.put(ip)
 
         queue.join()
+        out = [ip for ip in out.queue]
+
         if self.verbose:
+            if not len(out):
+                print("\nDiveces with open ports not found. Exiting...\n")
             print("-"*40, end="\n\n")
-        return [ip for ip in out.queue]
+        return out
 
-    def get_ip_range(self, network):
-        # преобразование данных типа "ip_first-ip_last", "ip/mask", "ip1, ip2, ip3", "ip" в список ip-адресов
-        if "-" in network:
-            ip_first, ip_last = network.strip(" ").split("-")
-            addresess = ipaddress.summarize_address_range(
-                                                            ipaddress.IPv4Address(ip_first),
-                                                            ipaddress.IPv4Address(ip_last))
-            addresess = sum([list(cidr) for cidr in addresess], [])
-            return (str(ip) for ip in addresess)
-
-        if "/" in network:
-            addresess = network[:network.rindex(".")] + ".0"+network[network.rindex("/"):]
-            return (str(ip) for ip in ipaddress.IPv4Network(addresess))
-
-        if "," or ", " in network:
-            return (ip for ip in network.replace(", ", ",").split(","))
-
-        return [network]
 
 if __name__ == "__main__":
     import sys

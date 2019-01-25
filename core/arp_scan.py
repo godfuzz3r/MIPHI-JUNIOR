@@ -33,6 +33,7 @@ class ArpScanner:
 
         if self.verbose:
             print("-"*40, end="\n\n")
+
         return collection
 
     def show_info(self, data=False):

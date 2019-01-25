@@ -30,9 +30,9 @@ class NetworkScanner:
 
         if not scanner_type:
                     # если в списке ip-адресов есть адрес, не принадлежащий локальной сети,
-                    # в которйо находится сканер, то примевыбратьнить PING-сканирование
+                    # в которой находится сканер, то примевыбратьнить PING-сканирование
             scanner_type = "arp"
-            for ip in self.get_ip_range(network):
+            for ip in self.get_ip_range(network):           # убейте меня
                 if ip in self.get_ip_range(local_network):
                     continue
                 else:
