@@ -9,6 +9,15 @@ import ipaddress
 import threading
 from queue import Queue
 
+HEADER = '\033[95m'
+OKBLUE = '\033[94m'
+OKGREEN = '\033[92m'
+WARNING = '\033[93m'
+FAIL = '\033[91m'
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
+
 class PortscanThread(threading.Thread):
     ports = [80, 8080, 23]
     start_clock = datetime.now()
@@ -28,8 +37,7 @@ class PortscanThread(threading.Thread):
 
             if open_ports:
                 if self.verbose:
-                    print("\tHost:\t%s" % ip)
-                    print("\tPorts:\t%s" % ", ".join(map(str, open_ports)), end="\n\n")
+                    self.show_info(ip, open_ports)
                 self.out.put((ip, open_ports))
 
             self.queue.task_done()
@@ -63,6 +71,15 @@ class PortscanThread(threading.Thread):
         else:
             return False
 
+    def show_info(self, ip, ports):
+        print(  BOLD + WARNING + "\tHost:" + ENDC +
+                "\t{}\n\t".format(ip) +
+                BOLD + WARNING + "Ports:" + ENDC +
+                "\t{}".format(", ".join(map(str, ports))),
+                end = "\n\n"    )
+
+        #print("\tPorts:\t%s" % ", ".join(map(str, open_ports)), end="\n\n")
+
 
 class PortScanner:
     def __init__(self, num_threads=10, verbose=True):
@@ -75,8 +92,8 @@ class PortScanner:
             [ (ip, [port1, port2]), (ip, [port1, port2]), ... ]
         """
         if self.verbose:
-            print("Performing port scan...")
-            print("-"*40)
+            print(HEADER + BOLD + OKBLUE + "Performing port scan..." + ENDC)
+            print(HEADER + "-"*40 + ENDC)
 
         queue = Queue()
         out = Queue()
@@ -94,8 +111,8 @@ class PortScanner:
 
         if self.verbose:
             if not len(out):
-                print("\nDiveces with open ports not found. Exiting...\n")
-            print("-"*40, end="\n\n")
+                print(WARNING + BOLD + "\nDiveces with open ports not found. Exiting...\n" + ENDC)
+            print(HEADER + "-"*40 + ENDC, end="\n\n")
         return out
 
 

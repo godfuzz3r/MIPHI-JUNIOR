@@ -19,8 +19,8 @@ class ArpScanner:
             [ [ip, macaddr], [ip, macaddr], ... ]
         """
         if self.verbose:
-                print("Performing ARP scan...")
-                print("-"*40)
+            print(HEADER + BOLD + OKBLUE + "Performing ARP scan..." + ENDC)
+            print(HEADER + "-"*40 + ENDC)
 
         ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=ip_range), timeout=2, verbose=0)
 
@@ -32,7 +32,7 @@ class ArpScanner:
             collection.append(result)
 
         if self.verbose:
-            print("-"*40, end="\n\n")
+            print(HEADER + "-"*40 + ENDC, end="\n\n")
 
         return collection
 

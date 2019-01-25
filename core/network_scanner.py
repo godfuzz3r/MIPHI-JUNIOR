@@ -103,8 +103,8 @@ class NetworkScanner:
             addresess = network[:network.rindex(".")] + ".0"+network[network.rindex("/"):]
             return (str(ip) for ip in ipaddress.IPv4Network(addresess))
 
-        if "," or ", " in network:
-            return (ip for ip in network.replace(", ", ",").split(","))
+        if "," or ", " or " " in network:
+            return (ip for ip in network.replace(", ", " ").replace(",", " ").split(" "))
 
         return [network]
 

@@ -8,6 +8,14 @@ import ipaddress
 import threading
 from queue import Queue
 
+HEADER = '\033[95m'
+OKBLUE = '\033[94m'
+OKGREEN = '\033[92m'
+WARNING = '\033[93m'
+FAIL = '\033[91m'
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
 
 class PingThread(threading.Thread):
     def __init__(self, queue, out, timeout=0.5, verbose=True):
@@ -46,9 +54,9 @@ class PingScanner:
 
     def scan(self, ip_range):
         if self.verbose:
-            print("Performing PING scan...")
-            print("-"*40)
-            
+            print(HEADER + BOLD + OKBLUE + "Performing PING scan..." + ENDC)
+            print(HEADER + "-"*40 + ENDC)
+
         queue = Queue()
         out = Queue()
 
@@ -61,9 +69,13 @@ class PingScanner:
             queue.put(ip)
 
         queue.join()
+
+        out = [ip for ip in out.queue]
         if self.verbose:
-            print("-"*40, end="\n\n")
-        return [ip for ip in out.queue]
+            print(HEADER + "-"*40 + ENDC)
+            print(BOLD + WARNING + "Found {} active hosts".format(len(out)) + ENDC, end="\n\n")
+
+        return out
 
 
 if __name__ == "__main__":

@@ -20,18 +20,23 @@ Usage examples:
                 sudo ./%(prog)s 192.168.0.1/24
                 sudo ./%(prog)s 192.168.0.102
                 sudo ./%(prog)s 192.168.0.100-192.168.0.110
-                sudo ./%(prog)s "192.168.0.1, 192.168.0.100, 192.168.0.103"
+                sudo ./%(prog)s 192.168.0.1 192.168.0.100 192.168.0.103"
                 sudo ./%(prog)s -t 40 -s ping"""
                                     )
 
     parser.add_argument('-s', '--scan_type', help='arp or ping scan', action='store', default=None)
     parser.add_argument('-t', '--threads', help='Number of threads', action='store', default=20)
-    parser.add_argument('network', nargs='?', help="ip-range, CIDR, or single ip address", default=None)
+    parser.add_argument('network', nargs='+', help="ip-range, CIDR, or single ip address", default=None)
 
     args = parser.parse_args()
 
+    if len(args.network) == 1:
+        network = args.network[0]
+    else:
+        network = " ".join(args.network)
+
     net_scanner = NetworkScanner(scanner_type=args.scan_type, num_threads=args.threads)
-    hosts = net_scanner.scan(args.network)
+    hosts = net_scanner.scan(network)
     print(hosts)
 
 if __name__ == "__main__":
