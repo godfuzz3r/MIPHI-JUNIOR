@@ -26,7 +26,7 @@ Usage examples:
 
     parser.add_argument('-s', '--scan_type', help='arp or ping scan', action='store', default=None)
     parser.add_argument('-t', '--threads', help='Number of threads', action='store', default=20)
-    parser.add_argument('network', nargs='+', help="ip-range, CIDR, or single ip address", default=None)
+    parser.add_argument('network', nargs='*', help="ip-range, CIDR, or single ip address", default=None)
 
     args = parser.parse_args()
 

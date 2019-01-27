@@ -5,7 +5,8 @@ import scapy.config
 import scapy.layers.l2
 import scapy.route
 import math
-import ipaddress
+import ipaddress, socket
+import re, struct
 from core.arp_scan import ArpScanner
 from core.ping_scan import PingScanner
 from core.port_scan import PortScanner
@@ -21,10 +22,11 @@ class NetworkScanner:
         local_network = self.get_local_network()
 
         if not network:
-            network = local_network
-            if not network:
+            if not local_network:
                 print("Can't find network")
                 return False
+            else:
+                network = local_network
 
         ip_range = self.get_ip_range(network)
 
@@ -90,23 +92,40 @@ class NetworkScanner:
         return 32 - int(round(math.log(0xFFFFFFFF - arg, 2)))
 
     def get_ip_range(self, network):
-        # преобразование данных типа first_ip-last_ip в список ip-адресов
-        if "-" in network:
-            ip_first, ip_last = network.strip(" ").split("-")
-            addresess = ipaddress.summarize_address_range(
-                                                            ipaddress.IPv4Address(ip_first),
-                                                            ipaddress.IPv4Address(ip_last))
-            addresess = sum([list(cidr) for cidr in addresess], [])
-            return (str(ip) for ip in addresess)
-
+        ip_list = list()
         if "/" in network:
-            addresess = network[:network.rindex(".")] + ".0"+network[network.rindex("/"):]
-            return (str(ip) for ip in ipaddress.IPv4Network(addresess))
+            ip, cidr = network.split("/")
+            cidr = int(cidr)
+            host_bits = 32 - cidr
 
-        if "," or ", " or " " in network:
-            return (ip for ip in network.replace(", ", " ").replace(",", " ").split(" "))
+            int_ip = self.ip2int(ip)
 
-        return [network]
+            start = (int_ip >> host_bits) << host_bits
+            end = start | ((1 << host_bits) - 1)
+
+            for i in range(start, end+1):
+                ip_list.append(self.int2ip(i))
+            return ip_list
+
+        ip_addresses = re.split("[,]", network)
+        for ip in ip_addresses:
+            match_ip_range = re.search("[-]", ip)
+            if match_ip_range:
+                start = ip[:match_ip_range.start()]
+                end = ip[match_ip_range.end():]
+
+                for ip_int in range(self.ip2int(start), self.ip2int(end) + 1):
+                    ip_list.append(self.int2ip(ip_int))
+            else:
+                ip_list.append(ip)
+
+        return ip_list
+
+    def ip2int(self, addr):
+        return struct.unpack("!I", socket.inet_aton(addr))[0]
+
+    def int2ip(self, addr):
+        return socket.inet_ntoa(struct.pack("!I", addr))
 
 if __name__ == "__main__":
     scanner = NetworkScanner(scanner_type="arp", num_threads=20, verbose=True)
