@@ -5,6 +5,7 @@ from argparse import RawTextHelpFormatter
 import os
 from core.network_scanner import NetworkScanner
 from core.fingerprint import FingerPrinter
+from core.hacking import basic_auth
 
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
@@ -60,7 +61,12 @@ Usage examples:
         else:
             ip, ports = host
             fingerprinted_hosts(fingerpriner.fingerprint(ip, ports))
-
+    for host in fingerprinted_hosts:
+        for port in host['ports']:
+            if basic_auth(host['ip'], port):
+                print('{}:{} has default login:password pair'.format(host['ip'], str(port)))
+            else:
+                print('{}:{} is not vulnerable to attack on Basic Authentication form'.format(host['ip'], str(port)))
 
 if __name__ == "__main__":
     main()
