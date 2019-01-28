@@ -5,7 +5,7 @@ import scapy.config
 import scapy.layers.l2
 import scapy.route
 import math
-import ipaddress, socket
+import socket
 import re, struct
 from core.arp_scan import ArpScanner
 from core.ping_scan import PingScanner
@@ -57,7 +57,14 @@ class NetworkScanner:
         port_scanner = PortScanner(num_threads=self.num_threads, verbose=self.verbose)
         ports = port_scanner.scan(active_hosts)
 
-        return ports
+        if scanner_type == "arp":
+            data = []
+            for ip_ports, macaddr in zip(ports, macaddreses):
+                ip, port = ip_ports
+                data.append((ip, port, macaddr))
+            return data
+        else:
+            return ports
 
     def get_local_network(self):
         for network, netmask, _, interface, address in scapy.config.conf.route.routes:

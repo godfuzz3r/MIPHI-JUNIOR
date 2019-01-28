@@ -4,6 +4,16 @@ import argparse
 from argparse import RawTextHelpFormatter
 import os
 from core.network_scanner import NetworkScanner
+from core.fingerprint import FingerPrinter
+
+HEADER = '\033[95m'
+OKBLUE = '\033[94m'
+OKGREEN = '\033[92m'
+WARNING = '\033[93m'
+FAIL = '\033[91m'
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+UNDERLINE = '\033[4m'
 
 def check_root():
     if not os.geteuid() == 0:
@@ -37,7 +47,19 @@ Usage examples:
 
     net_scanner = NetworkScanner(scanner_type=args.scan_type, num_threads=args.threads)
     hosts = net_scanner.scan(network)
-    print(hosts)
+
+    print(HEADER + BOLD + OKBLUE + "Trying to determine IOT devices..." + ENDC)
+    print(HEADER + "-"*40 + ENDC)
+    fingerpriner = FingerPrinter()
+
+    for host in hosts:
+        if len(host) == 3:
+            ip, ports, macaddr = host
+            fingerpriner.fingerprint(ip, ports, macaddr)
+        else:
+            ip, ports = host
+            fingerpriner.fingerprint(ip, ports)
+
 
 if __name__ == "__main__":
     main()
