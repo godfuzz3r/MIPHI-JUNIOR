@@ -52,13 +52,14 @@ Usage examples:
     print(HEADER + "-"*40 + ENDC)
     fingerpriner = FingerPrinter()
 
+    fingerprinted_hosts = []
     for host in hosts:
         if len(host) == 3:
             ip, ports, macaddr = host
-            fingerpriner.fingerprint(ip, ports, macaddr)
+            fingerprinted_hosts.append(fingerpriner.fingerprint(ip, ports, macaddr))
         else:
             ip, ports = host
-            fingerpriner.fingerprint(ip, ports)
+            fingerprinted_hosts(fingerpriner.fingerprint(ip, ports))
 
 
 if __name__ == "__main__":
