@@ -46,7 +46,7 @@ Usage examples:
     else:
         network = " ".join(args.network)
 
-    net_scanner = NetworkScanner(scanner_type=args.scan_type, num_threads=args.threads)
+    net_scanner = NetworkScanner(scanner_type=args.scan_type, num_threads=int(args.threads))
     hosts = net_scanner.scan(network)
 
     print(HEADER + BOLD + OKBLUE + "Trying to determine IOT devices..." + ENDC)

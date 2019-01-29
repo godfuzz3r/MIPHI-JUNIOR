@@ -2,6 +2,7 @@
 import requests
 import bs4 as bs
 import sys
+import re
 from requests.auth import HTTPBasicAuth
 from requests.auth import HTTPDigestAuth
 
@@ -41,12 +42,21 @@ class HttpAuth:
             creds = self.web_login(ip, port, device_vendor)
 
         if creds:
-            login, pwd = creds
+            if len(creds) == 3:
+                login, pwd, version = creds
+            else:
+                login, pwd = creds
+                version = False
+
             print(BOLD + FAIL + "\t[!] " + ENDC + BOLD +"Found default HTTP credentials for device:" + ENDC)
             print(BOLD + "\t\t\t\tLogin:\t\t" + ENDC + login)
             print(BOLD + "\t\t\t\tPassword:\t" + ENDC + pwd)
             print(BOLD + OKBLUE + "\t[*] Recommendation: " + ENDC + BOLD + "Change default login and password in the WEB settins" + ENDC)
             print()
+
+            if version:
+                print(BOLD + WARNING + "\t[*] " + ENDC + "Detected firmware version: " + BOLD + creds[2] + ENDC)
+                print()
         else:
             print(BOLD + OKGREEN + "\t[+] " + ENDC + "HTTP credentials is ok")
             print()
@@ -118,7 +128,15 @@ class HttpAuth:
         if method == "post":
             response = requests.post("http://%s:%d/%s" % (ip, port, url), data=params, cookies={"client_login": login, "client_password": pwd})
             if "deviceinfo" in response.text:
-                return login, pwd
+                version_str = response.text[response.text.find("version"):
+                                            response.text.find("version")+40
+                                            ]
+                version = re.search('([\d.]+)', version_str)
+                
+                if version:
+                    return login, pwd, version.group(0)
+                else:
+                    return login, pwd
 
         elif method == "get":
             pass
