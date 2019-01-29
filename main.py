@@ -5,7 +5,7 @@ from argparse import RawTextHelpFormatter
 import os
 from core.network_scanner import NetworkScanner
 from core.fingerprint import FingerPrinter
-from core.hacking import basic_auth
+from core.http_auth import HttpAuth
 
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
@@ -53,20 +53,17 @@ Usage examples:
     print(HEADER + "-"*40 + ENDC)
     fingerpriner = FingerPrinter()
 
-    fingerprinted_hosts = []
     for host in hosts:
         if len(host) == 3:
             ip, ports, macaddr = host
-            fingerprinted_hosts.append(fingerpriner.fingerprint(ip, ports, macaddr))
+            device_info = fingerpriner.fingerprint(ip, ports, macaddr)
         else:
             ip, ports = host
-            fingerprinted_hosts(fingerpriner.fingerprint(ip, ports))
-    for host in fingerprinted_hosts:
-        for port in host['ports']:
-            if basic_auth(host['ip'], port):
-                print('{}:{} has default login:password pair'.format(host['ip'], str(port)))
-            else:
-                print('{}:{} is not vulnerable to attack on Basic Authentication form'.format(host['ip'], str(port)))
+            device_info = fingerpriner.fingerprint(ip, ports)
+
+        http = HttpAuth()
+        creds = http.check_default_passwords(ip, ports, device_info["device_vendor"], device_info["device_name"])
+
 
 if __name__ == "__main__":
     main()
