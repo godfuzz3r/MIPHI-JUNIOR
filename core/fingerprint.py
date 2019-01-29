@@ -3,7 +3,7 @@
 
 import requests
 import json
-from core.mac_vendor import MacParser
+#from core.mac_vendor import MacParser
 import sys
 import re
 import telnetlib
@@ -22,9 +22,19 @@ class FingerPrinter:
     telnet_ports = [23]
     adb_ports = [5555]
 
+    dlink_fingerprints = {  "DIR-600": ["<span class=\"version\">Firmware Version : 2.17</span>"],
+                            "DIR-850L": ["<div class=\"fwv\">Firmware Version : 1.05<span id=\"fw_ver\" align=\"left\"></span></div>"],
+                            "DIR-300": ["<span class=\"version\">Firmware Version : 2.16</span>",
+                                        "<td noWrap align=\"right\">Firmware Version&nbsp;:&nbsp;1.06&nbsp;</td>"],
+                            "DIR-605": ["<td noWrap align=\"right\">$localizations&nbsp;:&nbsp;2.01&nbsp;</td>"],
+                            "DIR-615": ["<td noWrap align=\"right\">Firmware Version&nbsp;:&nbsp;4.00&nbsp;</td>"],
+                            "DIR-816L": ["<div class=\"fwv\">Firmware Version : 2.05<span id=\"fw_ver\" align=\"left\"></span></div>"],
+
+    }
+
     def __init__(self, verbose=True):
         self.verbose = verbose
-        self.data = json.loads(open("core/data/models.json").read(), encoding="utf-8")
+        self.data = json.loads(open("data/models.json").read(), encoding="utf-8")
         self.info = {   "ip":               False,
                         "ports":            [],
                         "device_vendor":    False,
@@ -85,10 +95,16 @@ class FingerPrinter:
                         model_found = True
                         break
 
-        # try to retrive firmware version
-        #if "firmware version" or "firmware ver" or "firmware v" in \
-        #    html.lower() or str(headers).lower():
-        #    pass
+        if self.info["device_vendor"] == "D-Link" and not self.info["firmware_ver"]:
+            self.get_dlink_firmware(ip, port, self.info["device_name"])
+
+    def get_dlink_firmware(self, ip, port, model):
+        response = requests.get("http://%s:%d" % (ip, port))
+
+        if "Server" in response.headers.keys():
+            if model in response.headers["Server"]:
+                ver_str = response.headers["Server"].split(model)[1].lower().replace(" ver ", "")
+                self.info["firmware_ver"] = ver_str
 
     def telnet_fingerprint(self, ip, port):
         #connection = telnetlib.Telnet(ip)
@@ -118,11 +134,11 @@ class FingerPrinter:
                     BOLD + OKGREEN + device_name + ENDC)
 
         if firmware_ver:
-            print(  BOLD + WARNING + "\n\t\tFirmware Version:" + ENDC +
+            print(  BOLD + WARNING + "\tFirmware Ver.:\t" + ENDC +
                     firmware_ver)
         print()
 
 
 if __name__ == "__main__":
     fingerprinter = FingerPrinter()
-    fingerprinter.fignreprint(sys.argv[1], [80, 23])
+    fingerprinter.fingerprint(sys.argv[1], [80])
