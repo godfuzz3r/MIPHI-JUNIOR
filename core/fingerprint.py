@@ -3,7 +3,7 @@
 
 import requests
 import json
-#from core.mac_vendor import MacParser
+from core.mac_vendor import MacParser
 import sys
 import re
 import telnetlib
@@ -22,19 +22,9 @@ class FingerPrinter:
     telnet_ports = [23]
     adb_ports = [5555]
 
-    dlink_fingerprints = {  "DIR-600": ["<span class=\"version\">Firmware Version : 2.17</span>"],
-                            "DIR-850L": ["<div class=\"fwv\">Firmware Version : 1.05<span id=\"fw_ver\" align=\"left\"></span></div>"],
-                            "DIR-300": ["<span class=\"version\">Firmware Version : 2.16</span>",
-                                        "<td noWrap align=\"right\">Firmware Version&nbsp;:&nbsp;1.06&nbsp;</td>"],
-                            "DIR-605": ["<td noWrap align=\"right\">$localizations&nbsp;:&nbsp;2.01&nbsp;</td>"],
-                            "DIR-615": ["<td noWrap align=\"right\">Firmware Version&nbsp;:&nbsp;4.00&nbsp;</td>"],
-                            "DIR-816L": ["<div class=\"fwv\">Firmware Version : 2.05<span id=\"fw_ver\" align=\"left\"></span></div>"],
-
-    }
-
     def __init__(self, verbose=True):
         self.verbose = verbose
-        self.data = json.loads(open("data/models.json").read(), encoding="utf-8")
+        self.data = json.loads(open("core/data/models.json").read(), encoding="utf-8")
         self.info = {   "ip":               False,
                         "ports":            [],
                         "device_vendor":    False,
@@ -53,8 +43,8 @@ class FingerPrinter:
             if port in self.http_ports:
                 self.http_fingerprint(ip, port)
 
-            if port in self.telnet_ports:
-                self.telnet_fingerprint(ip, port)
+            #if port in self.telnet_ports:
+            #    self.telnet_fingerprint(ip, port)
 
         if self.verbose:
             self.show_info()

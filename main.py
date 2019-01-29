@@ -6,6 +6,7 @@ import os
 from core.network_scanner import NetworkScanner
 from core.fingerprint import FingerPrinter
 from core.http_auth import HttpAuth
+import core.cvemitre as cvemitre
 
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
@@ -44,7 +45,7 @@ Usage examples:
     if len(args.network) == 1:
         network = args.network[0]
     else:
-        network = " ".join(args.network)
+        network = ",".join(args.network)
 
     net_scanner = NetworkScanner(scanner_type=args.scan_type, num_threads=int(args.threads))
     hosts = net_scanner.scan(network)
@@ -62,8 +63,19 @@ Usage examples:
             device_info = fingerpriner.fingerprint(ip, ports)
 
         http = HttpAuth()
-        creds = http.check_default_passwords(ip, ports, device_info["device_vendor"], device_info["device_name"])
+        http.check_default_passwords(ip, ports, device_info["device_vendor"], device_info["device_name"])
 
+        print( BOLD + WARNING + "\t[*] " + ENDC + "Checking for device vulnerabilities..." + ENDC)
+        device_cve = cvemitre.get_cve(device_info["device_name"])
+        if device_cve:
+            print( BOLD + FAIL + "\t[!] " + ENDC + BOLD + "Found possible device vulnerabilities:" + ENDC)
+            for cve in device_cve:
+                print( BOLD + FAIL + "\t\t\t[+] " + ENDC + BOLD + cve + ENDC)
+        else:
+            print( BOLD + OKGREEN + "\t[+] " + ENDC + BOLD + "No vulnerabilities found for this device" + ENDC)
+
+        print()
+        print(HEADER + "-"*40 + ENDC)
 
 if __name__ == "__main__":
     main()

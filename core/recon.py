@@ -2,6 +2,7 @@ def get_telnet(ip, port=23):
     import telnetlib
     with telnetlib.Telnet(ip, port, timeout=1) as s:
         return s.read_some().decode()
+        
 def recon(ip, port):
     import requests, models
     r=requests.get("http://{}:{}/".format(ip, port))

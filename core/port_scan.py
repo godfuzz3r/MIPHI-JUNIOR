@@ -19,7 +19,7 @@ BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 
 class PortscanThread(threading.Thread):
-    ports = [80, 8080, 23]
+    ports = [80, 8080, 8081, 23]
     start_clock = datetime.now()
     SYNACK = 0x12
     RSTACK = 0x14
@@ -42,14 +42,22 @@ class PortscanThread(threading.Thread):
 
             self.queue.task_done()
 
-    def ScanPorts(self, host):
+    def ScanPorts(self, host, timeout=1):
         open_ports = []
-        for port in self.ports:
-            port_status = self.ScanPort(host, port)
-            if port_status is "Unreachable":
-                return False
-            elif port_status is "Open":
-                open_ports.append(port)
+        srcport = RandShort()
+
+        for dport in self.ports:
+        	SYNACKpkt = sr1(IP(dst=host) /
+        			TCP(sport=srcport, dport=dport, flags="S"),
+        			timeout=timeout, verbose=0)
+        	if not SYNACKpkt:
+        		continue
+
+        	pktflags = SYNACKpkt.getlayer(TCP).flags
+        	RSTpkt = IP(dst = host)/TCP(sport = srcport, dport = dport, flags = "R")
+        	send(RSTpkt, verbose=0)
+        	if pktflags == self.SYNACK:
+        		open_ports.append(dport)
 
         if open_ports:
             return open_ports
@@ -58,7 +66,8 @@ class PortscanThread(threading.Thread):
 
     def ScanPort(self, host, port):
         srcport = RandShort()
-        SYNACKpkt = sr1(IP(dst = host)/TCP(sport = srcport, dport = port, flags = "S"), timeout=1, verbose=0)
+        SYNACKpkt = sr1(IP(dst = host) /
+                        TCP(sport = srcport, dport = port, flags = "S"), timeout=1, verbose=0)
         if not SYNACKpkt:
             return "Unreachable"
 
@@ -98,7 +107,7 @@ class PortScanner:
         queue = Queue()
         out = Queue()
 
-        for i in range(self.num_threads):
+        for i in range(min(self.num_threads, len(ip_range))):
             t = PortscanThread(queue, out, verbose=self.verbose)
             t.setDaemon(True)
             t.start()
@@ -112,6 +121,8 @@ class PortScanner:
         if self.verbose:
             if not len(out):
                 print(WARNING + BOLD + "\nDiveces with open ports not found. Exiting...\n" + ENDC)
+                exit(1)
+                
             print(HEADER + "-"*40 + ENDC, end="\n\n")
         return out
 

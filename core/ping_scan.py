@@ -7,6 +7,7 @@ from scapy.all import IP, ICMP, sr1
 import ipaddress
 import threading
 from queue import Queue
+import sys
 
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
@@ -18,7 +19,7 @@ BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 
 class PingThread(threading.Thread):
-    def __init__(self, queue, out, timeout=0.5, verbose=True):
+    def __init__(self, queue, out, timeout=1, verbose=True):
         threading.Thread.__init__(self)
         self.TIMEOUT = timeout
         self.queue = queue
@@ -38,8 +39,7 @@ class PingThread(threading.Thread):
             self.queue.task_done()
 
     def icmp_ping(self, ip):
-        packet = IP(dst=ip, ttl=20)/ICMP()
-        reply = sr1(packet, timeout=self.TIMEOUT, verbose=0)
+        reply = sr1(IP(dst=ip)/ICMP(), timeout=self.TIMEOUT, verbose=0)
 
         if reply:
             return reply.src
@@ -80,4 +80,4 @@ class PingScanner:
 
 if __name__ == "__main__":
     scanner = PingScanner(num_threads=40, verbose=True)
-    scanner.scan("192.168.0.1/24")
+    scanner.scan([sys.argv[1]])

@@ -46,7 +46,7 @@ class NetworkScanner:
         if scanner_type == "arp":
             scanner = ArpScanner(verbose=True)
         elif scanner_type == "ping":
-            scanner = PingScanner(self.num_threads, verbose=True)
+            scanner = PingScanner(min(self.num_threads, len(ip_range)), verbose=True)
 
         #active_hosts = scanner.scan(ip_range)
         if scanner_type == "arp":
@@ -54,7 +54,7 @@ class NetworkScanner:
         else:
             active_hosts = scanner.scan(ip_range)
 
-        port_scanner = PortScanner(num_threads=self.num_threads, verbose=self.verbose)
+        port_scanner = PortScanner(num_threads=min(self.num_threads, len(ip_range)), verbose=self.verbose)
         ports = port_scanner.scan(active_hosts)
 
         if scanner_type == "arp":

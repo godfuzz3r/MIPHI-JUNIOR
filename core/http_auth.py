@@ -39,14 +39,11 @@ class HttpAuth:
         if self.auth_type == "basic":
             creds = self.basic_auth(ip, port, device_vendor)
         elif self.auth_type == "web_login":
-            creds = self.web_login(ip, port, device_vendor)
+            creds = False
+            #creds = self.web_login(ip, port, device_vendor)
 
         if creds:
-            if len(creds) == 3:
-                login, pwd, version = creds
-            else:
-                login, pwd = creds
-                version = False
+            login, pwd = creds
 
             print(BOLD + FAIL + "\t[!] " + ENDC + BOLD +"Found default HTTP credentials for device:" + ENDC)
             print(BOLD + "\t\t\t\tLogin:\t\t" + ENDC + login)
@@ -54,9 +51,6 @@ class HttpAuth:
             print(BOLD + OKBLUE + "\t[*] Recommendation: " + ENDC + BOLD + "Change default login and password in the WEB settins" + ENDC)
             print()
 
-            if version:
-                print(BOLD + WARNING + "\t[*] " + ENDC + "Detected firmware version: " + BOLD + creds[2] + ENDC)
-                print()
         else:
             print(BOLD + OKGREEN + "\t[+] " + ENDC + "HTTP credentials is ok")
             print()
@@ -90,7 +84,7 @@ class HttpAuth:
         if "WWW-Authenticate" not in response.headers.keys():
             return login, pwd
 
-    def web_login(self, ip, port, vendor):
+    '''def web_login(self, ip, port, vendor):
         if self.pwd_db.get(vendor):
             login = self.pwd_db[vendor][0]
             pwd = self.pwd_db[vendor][1]
@@ -128,18 +122,10 @@ class HttpAuth:
         if method == "post":
             response = requests.post("http://%s:%d/%s" % (ip, port, url), data=params, cookies={"client_login": login, "client_password": pwd})
             if "deviceinfo" in response.text:
-                version_str = response.text[response.text.find("version"):
-                                            response.text.find("version")+40
-                                            ]
-                version = re.search('([\d.]+)', version_str)
-                
-                if version:
-                    return login, pwd, version.group(0)
-                else:
-                    return login, pwd
+                return login, pwd
 
         elif method == "get":
-            pass
+            pass'''
 
 
 if __name__ == "__main__":
