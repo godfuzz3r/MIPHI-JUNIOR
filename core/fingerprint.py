@@ -25,12 +25,17 @@ class FingerPrinter:
     def __init__(self, verbose=True):
         self.verbose = verbose
         self.data = json.loads(open("core/data/models.json").read(), encoding="utf-8")
-        self.info = {   "device_vendor": False,
-                        "device_name":  False,
-                        "firmware_ver": False,
+        self.info = {   "ip":               False,
+                        "ports":            [],
+                        "device_vendor":    False,
+                        "device_name":      False,
+                        "firmware_ver":     False,
                     }
 
     def fingerprint(self, ip, ports, macaddr=False):
+        self.info["ip"] = ip
+        self.info["ports"] = ports
+
         if macaddr:
             self.macaddr_fingerprint(macaddr)
 
@@ -92,26 +97,30 @@ class FingerPrinter:
         return
 
     def show_info(self):
+        ip = self.info["ip"]
+        ports = self.info["ports"]
         device_vendor = self.info["device_vendor"]
         device_name = self.info["device_name"]
         firmware_ver = self.info["firmware_ver"]
 
+        print(  BOLD + OKBLUE + "[+] " + WARNING + "Found device:\t" + ENDC + ip, end="\n\n")
+
         if device_vendor and device_name:
-            print(  BOLD + WARNING + "Found device:\t" + ENDC +
+            print(  BOLD + WARNING + "\tDevice name:\t" + ENDC +
                     BOLD + OKGREEN + "{0} {1}".format( device_vendor, device_name ) + ENDC)
 
         elif device_vendor:
-            print(  BOLD + WARNING + "Found device:\t" + ENDC +
+            print(  BOLD + WARNING + "\tDevice name:\t" + ENDC +
                     BOLD + OKGREEN + device_vendor + ENDC)
 
         elif device_name:
-            print(  BOLD + WARNING + "Found device:\t" + ENDC +
+            print(  BOLD + WARNING + "\tDevice name:\t" + ENDC +
                     BOLD + OKGREEN + device_name + ENDC)
 
         if firmware_ver:
             print(  BOLD + WARNING + "\n\t\tFirmware Version:" + ENDC +
                     firmware_ver)
-        print("\n\n")
+        print()
 
 
 if __name__ == "__main__":
