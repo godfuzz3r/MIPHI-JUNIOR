@@ -50,6 +50,11 @@ Usage examples:
     net_scanner = NetworkScanner(scanner_type=args.scan_type, num_threads=int(args.threads))
     hosts = net_scanner.scan(network)
 
+    if not hosts:
+    	print( BOLD + "No working devices found, exiting..." + ENDC )
+    	print( HEADER + "-"*40 + ENDC, end="\n\n" )
+    	return 1
+
     print(HEADER + BOLD + OKBLUE + "Trying to determine IOT devices..." + ENDC)
     print(HEADER + "-"*40 + ENDC)
     fingerpriner = FingerPrinter()
@@ -70,7 +75,7 @@ Usage examples:
         if device_cve:
             print( BOLD + FAIL + "\t[!] " + ENDC + BOLD + "Found possible device vulnerabilities:" + ENDC)
             for cve in device_cve:
-                print( BOLD + FAIL + "\t\t\t[+] " + ENDC + BOLD + cve + ENDC)
+                print( BOLD + FAIL + "\t\t[+] " + ENDC + BOLD + cve + ENDC)
         else:
             print( BOLD + OKGREEN + "\t[+] " + ENDC + BOLD + "No vulnerabilities found for this device" + ENDC)
 

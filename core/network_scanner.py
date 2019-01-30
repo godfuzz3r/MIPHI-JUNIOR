@@ -23,7 +23,6 @@ class NetworkScanner:
 
         if not network:
             if not local_network:
-                print("Can't find network")
                 return False
             else:
                 network = local_network
@@ -49,10 +48,14 @@ class NetworkScanner:
             scanner = PingScanner(min(self.num_threads, len(ip_range)), verbose=True)
 
         #active_hosts = scanner.scan(ip_range)
-        if scanner_type == "arp":
-            active_hosts, macaddreses = list(zip(*scanner.scan(ip_range)))
+        scan_result = scanner.scan(ip_range)
+        if scan_result:
+            if scanner_type == "arp":
+                active_hosts, macaddreses = list(zip(*scan_result))
+            else:
+                active_hosts = scanner.scan(ip_range)
         else:
-            active_hosts = scanner.scan(ip_range)
+            return False
 
         port_scanner = PortScanner(num_threads=min(self.num_threads, len(ip_range)), verbose=self.verbose)
         ports = port_scanner.scan(active_hosts)
