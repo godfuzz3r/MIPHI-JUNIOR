@@ -46,10 +46,12 @@ class FingerPrinter:
             #if port in self.telnet_ports:
             #    self.telnet_fingerprint(ip, port)
 
-        if self.verbose:
-            self.show_info()
-
-        return self.info
+        if self.info["device_name"]:
+            if self.verbose:
+                self.show_info()
+            return self.info
+        else:
+            return False
 
     def macaddr_fingerprint(self, macaddr):
         macparser = MacParser()

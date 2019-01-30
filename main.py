@@ -59,6 +59,7 @@ Usage examples:
     print(HEADER + "-"*40 + ENDC)
     fingerpriner = FingerPrinter()
 
+    devices_found = 0
     for host in hosts:
         if len(host) == 3:
             ip, ports, macaddr = host
@@ -66,6 +67,11 @@ Usage examples:
         else:
             ip, ports = host
             device_info = fingerpriner.fingerprint(ip, ports)
+
+        if not device_info:
+            continue
+        else:
+            devices_found += 1
 
         http = HttpAuth()
         http.check_default_passwords(ip, ports, device_info["device_vendor"], device_info["device_name"])
@@ -80,7 +86,10 @@ Usage examples:
             print( BOLD + OKGREEN + "\t[+] " + ENDC + BOLD + "No vulnerabilities found for this device" + ENDC)
 
         print()
-        print(HEADER + "-"*40 + ENDC)
+
+    if not devices_found:
+    	print( BOLD + "No working devices found, exiting..." + ENDC )
+    print(HEADER + "-"*40 + ENDC)
 
 if __name__ == "__main__":
     main()

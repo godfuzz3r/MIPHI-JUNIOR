@@ -39,8 +39,7 @@ class HttpAuth:
         if self.auth_type == "basic":
             creds = self.basic_auth(ip, port, device_vendor)
         elif self.auth_type == "web_login":
-            creds = False
-            #creds = self.web_login(ip, port, device_vendor)
+            creds = self.web_login(ip, port, device_vendor, device_name)
 
         if creds:
             login, pwd = creds
@@ -84,7 +83,7 @@ class HttpAuth:
         if "WWW-Authenticate" not in response.headers.keys():
             return login, pwd
 
-    '''def web_login(self, ip, port, vendor):
+    def web_login(self, ip, port, vendor, model):
         if self.pwd_db.get(vendor):
             login = self.pwd_db[vendor][0]
             pwd = self.pwd_db[vendor][1]
@@ -92,6 +91,10 @@ class HttpAuth:
             login = self.pwd_db["default"][0]
             pwd = self.pwd_db["default"][1]
 
+        if "DIR-300NRU" in model:
+            return self.dlink_dir300nru_login(ip, port, login, pwd, vendor)
+
+    def dlink_dir300nru_login(self, ip, port, login, pwd, vendor):
         response = requests.get('http://%s:%d' % (ip, port))
         soup = bs.BeautifulSoup(response.text, "html.parser")
 
@@ -119,13 +122,11 @@ class HttpAuth:
                 else:
                     params[data_input["id"]] = self.pwd_db["default"][1]
 
-        if method == "post":
-            response = requests.post("http://%s:%d/%s" % (ip, port, url), data=params, cookies={"client_login": login, "client_password": pwd})
-            if "deviceinfo" in response.text:
-                return login, pwd
-
-        elif method == "get":
-            pass'''
+        response = requests.post("http://%s:%d/%s" % (ip, port, url), data=params, cookies={"client_login": login, "client_password": pwd})
+        if "deviceinfo" in response.text:
+            return login, pwd
+        else:
+            return False
 
 
 if __name__ == "__main__":
