@@ -60,7 +60,7 @@ class PingScanner:
         queue = Queue()
         out = Queue()
 
-        for i in range(self.num_threads):
+        for i in range(min(self.num_threads, len(ip_range))):
             t = PingThread(queue, out, verbose=self.verbose)
             t.setDaemon(True)
             t.start()
