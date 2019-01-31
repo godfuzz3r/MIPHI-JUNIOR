@@ -120,7 +120,7 @@ class PortScanner:
 
         if self.verbose:
             if not len(out):
-                print(WARNING + BOLD + "\nDiveces with open ports not found. Exiting...\n" + ENDC)
+                print(WARNING + BOLD + "\nDevices with open ports are not found. Exiting...\n" + ENDC)
                 exit(1)
 
             print(HEADER + "-"*40 + ENDC, end="\n\n")
