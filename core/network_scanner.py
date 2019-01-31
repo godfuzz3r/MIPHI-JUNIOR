@@ -42,6 +42,7 @@ class NetworkScanner:
         else:
             scanner_type = scanner_type.lower()
 
+        # нужно для использования меньшего количества потоков, если это возможно
         iprange_len = 0
         for ip in self.get_ip_range(network):
             iprange_len += 1
