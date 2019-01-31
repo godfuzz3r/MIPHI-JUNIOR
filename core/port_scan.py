@@ -107,7 +107,7 @@ class PortScanner:
         queue = Queue()
         out = Queue()
 
-        for i in range(min(self.num_threads, len(ip_range))):
+        for i in range(self.num_threads):
             t = PortscanThread(queue, out, verbose=self.verbose)
             t.setDaemon(True)
             t.start()
@@ -122,7 +122,7 @@ class PortScanner:
             if not len(out):
                 print(WARNING + BOLD + "\nDiveces with open ports not found. Exiting...\n" + ENDC)
                 exit(1)
-                
+
             print(HEADER + "-"*40 + ENDC, end="\n\n")
         return out
 

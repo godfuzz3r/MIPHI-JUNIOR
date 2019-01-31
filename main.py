@@ -6,6 +6,7 @@ import os
 from core.network_scanner import NetworkScanner
 from core.fingerprint import FingerPrinter
 from core.http_auth import HttpAuth
+import core.telnet_auth
 import core.cvemitre as cvemitre
 
 HEADER = '\033[95m'
@@ -75,6 +76,7 @@ Usage examples:
 
         http = HttpAuth()
         http.check_default_passwords(ip, ports, device_info["device_vendor"], device_info["device_name"])
+        core.telnet_auth.check(device_info)
 
         print( BOLD + WARNING + "\t[*] " + ENDC + "Checking for device vulnerabilities..." + ENDC)
         device_cve = cvemitre.get_cve(device_info["device_name"])

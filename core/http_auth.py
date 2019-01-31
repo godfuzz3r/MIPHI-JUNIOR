@@ -33,7 +33,7 @@ class HttpAuth:
         else:
             return
 
-        print(BOLD + WARNING + "\t[*] " + ENDC + "Checking for default credentials...")
+        print(BOLD + WARNING + "\t[*] " + ENDC + "Checking for default HTTP credentials...")
         self.get_auth_type(ip, port)
 
         if self.auth_type == "basic":

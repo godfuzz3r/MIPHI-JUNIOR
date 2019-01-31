@@ -33,7 +33,7 @@ class NetworkScanner:
                     # если в списке ip-адресов есть адрес, не принадлежащий локальной сети,
                     # в которой находится сканер, то примевыбратьнить PING-сканирование
             scanner_type = "arp"
-            for ip in self.get_ip_range(network):           # убейте меня
+            for ip in self.get_ip_range(network):
                 if ip in self.get_ip_range(local_network):
                     continue
                 else:
@@ -42,22 +42,25 @@ class NetworkScanner:
         else:
             scanner_type = scanner_type.lower()
 
+        iprange_len = 0
+        for ip in self.get_ip_range(network):
+            iprange_len += 1
+
         if scanner_type == "arp":
             scanner = ArpScanner(verbose=True)
         elif scanner_type == "ping":
-            scanner = PingScanner(min(self.num_threads, len(ip_range)), verbose=True)
+            scanner = PingScanner(num_threads=min(self.num_threads, iprange_len), verbose=True)
 
-        #active_hosts = scanner.scan(ip_range)
         scan_result = scanner.scan(ip_range)
         if scan_result:
             if scanner_type == "arp":
                 active_hosts, macaddreses = list(zip(*scan_result))
             else:
-                active_hosts = scanner.scan(ip_range)
+                active_hosts = scan_result
         else:
             return False
 
-        port_scanner = PortScanner(num_threads=min(self.num_threads, len(ip_range)), verbose=self.verbose)
+        port_scanner = PortScanner(num_threads=min(self.num_threads, iprange_len), verbose=self.verbose)
         ports = port_scanner.scan(active_hosts)
 
         if scanner_type == "arp":
@@ -102,7 +105,6 @@ class NetworkScanner:
         return 32 - int(round(math.log(0xFFFFFFFF - arg, 2)))
 
     def get_ip_range(self, network):
-        ip_list = list()
         if "/" in network:
             ip, cidr = network.split("/")
             cidr = int(cidr)
@@ -113,11 +115,17 @@ class NetworkScanner:
             start = (int_ip >> host_bits) << host_bits
             end = start | ((1 << host_bits) - 1)
 
+            #for i in range(start, end+1):
+            #    ip_list.append(self.int2ip(i))
+            #return ip_list
             for i in range(start, end+1):
-                ip_list.append(self.int2ip(i))
-            return ip_list
+                yield self.int2ip(i)
 
+            return
+
+        ip_list = list()
         ip_addresses = re.split("[,]", network)
+
         for ip in ip_addresses:
             match_ip_range = re.search("[-]", ip)
             if match_ip_range:
@@ -125,11 +133,13 @@ class NetworkScanner:
                 end = ip[match_ip_range.end():]
 
                 for ip_int in range(self.ip2int(start), self.ip2int(end) + 1):
-                    ip_list.append(self.int2ip(ip_int))
+                    #ip_list.append(self.int2ip(ip_int))
+                    yield self.int2ip(ip_int)
+                return
             else:
-                ip_list.append(ip)
+                yield ip
 
-        return ip_list
+        return
 
     def ip2int(self, addr):
         return struct.unpack("!I", socket.inet_aton(addr))[0]

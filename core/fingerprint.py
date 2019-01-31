@@ -43,8 +43,8 @@ class FingerPrinter:
             if port in self.http_ports:
                 self.http_fingerprint(ip, port)
 
-            #if port in self.telnet_ports:
-            #    self.telnet_fingerprint(ip, port)
+            if port in self.telnet_ports:
+                self.telnet_fingerprint(ip, port)
 
         if self.info["device_name"]:
             if self.verbose:
@@ -99,9 +99,22 @@ class FingerPrinter:
                 self.info["firmware_ver"] = ver_str
 
     def telnet_fingerprint(self, ip, port):
-        #connection = telnetlib.Telnet(ip)
-        #data = connection.read_until(b':')
-        #print(data)
+        connection = telnetlib.Telnet(ip)
+        data = connection.read_until(b':')
+
+        model_found = False
+        for vendor in self.data.keys():
+            if model_found:
+                break
+
+            for model in self.data[vendor]:
+                if model in str(data):
+                    self.info["device_vendor"] = vendor
+                    self.info["device_name"] = model
+
+                    model_found = True
+                    break
+
         return
 
     def show_info(self):
