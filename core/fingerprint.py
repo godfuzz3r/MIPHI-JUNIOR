@@ -43,7 +43,7 @@ class FingerPrinter:
             if port in self.http_ports:
                 self.http_fingerprint(ip, port)
 
-            if port in self.telnet_ports:
+            if port in self.telnet_ports and not self.info["device_name"]:
                 self.telnet_fingerprint(ip, port)
 
         if self.info["device_name"]:

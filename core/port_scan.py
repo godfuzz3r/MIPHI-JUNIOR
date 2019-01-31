@@ -42,7 +42,7 @@ class PortscanThread(threading.Thread):
 
             self.queue.task_done()
 
-    def ScanPorts(self, host, timeout=1):
+    def ScanPorts(self, host, timeout=1.5):
         open_ports = []
         srcport = RandShort()
 
