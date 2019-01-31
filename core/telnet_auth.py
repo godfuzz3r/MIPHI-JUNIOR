@@ -16,25 +16,28 @@ telnet_ports = [23]
 def check(device_info):
     for port in device_info["ports"]:
         if port in telnet_ports:
+
             if not device_info["device_vendor"] in default_pwds.keys():
                 login = default_pwds["default"][0]
                 password = default_pwds["default"][1]
+
             else:
                 login = default_pwds["device_vendor"][0]
                 password = default_pwds["device_vendor"][1]
 
             print(BOLD + WARNING + "\t[*] " + ENDC + "Checking for default Telnet credentials...")
+
             conn = Telnet(device_info["ip"], timeout = 1)
 
+            conn.read_until(b":")
             conn.write((login + "\n").encode('ascii'))
 
-            conn.read_until(":".encode('ascii'))
+            conn.read_until(b":")
             conn.write((password + "\n").encode('ascii'))
-
             try:
                 while 1:
                     r = conn.read_some()
-                    if "> " or "$ " or "# " in r:
+                    if b"> " in r or b"$ " in r or b"# " in r:
                         print(BOLD + FAIL + "\t[!] " + ENDC + BOLD +"Found default Telnet credentials for device:" + ENDC)
                         print(BOLD + "\t\t\t\tLogin:\t\t" + ENDC + login)
                         print(BOLD + "\t\t\t\tPassword:\t" + ENDC + password)
@@ -43,9 +46,11 @@ def check(device_info):
 
                         return login, password
             except:
-                print(BOLD + OKGREEN + "\t[+] " + ENDC + "Telnet credentials is ok")
-                print()
-                return False
+                pass
+
+            print(BOLD + OKGREEN + "\t[+] " + ENDC + "Telnet credentials is ok")
+            print()
+            return False
 
 if __name__ == "__main__":
     check(bytes("192.168.0.1".encode('ascii')), [23])

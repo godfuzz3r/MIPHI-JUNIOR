@@ -99,8 +99,11 @@ class FingerPrinter:
                 self.info["firmware_ver"] = ver_str
 
     def telnet_fingerprint(self, ip, port):
-        connection = telnetlib.Telnet(ip)
-        data = connection.read_until(b':')
+        try:
+            connection = telnetlib.Telnet(ip)
+            data = connection.read_until(b':')
+        except:
+            return False
 
         model_found = False
         for vendor in self.data.keys():
